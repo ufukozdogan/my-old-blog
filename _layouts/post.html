@@ -1,0 +1,91 @@
+---
+layout: default
+---
+
+{% assign minutes = content | strip_html | number_of_words | divided_by: 180 %}
+{% if minutes == 0 %}
+{% assign minutes = 1 %}
+{% endif %}
+{% if site.show_page_navigation %}
+<div class="page-navigation">
+    <!--<a class="home" href="{{ "/" | relative_url }}">-->
+    {% if page.next.url %}
+    <a class="home" href="{{ page.next.url }}">
+        <!--&laquo; HOME-->
+        &laquo;  {{page.next.title}}
+    </a>
+    {% endif %}
+  {% if page.previous.url %}
+  <!--<a class="next" href="{{page.previous.url}}"> NEXT &raquo;</a>-->
+  <a class="next" href="{{page.previous.url}}"> {{page.previous.title}}  &raquo;</a>
+  {% endif %}
+</div>
+{% endif %}
+<div class="clearfix bottom-border"></div>
+<div class="post-header mb1">
+  <h1>{{ page.title }}</h1>
+    {% if site.show_categories  %}
+  <div class="post-categories">
+        <div class="category-block">
+        {% for category in page.categories %}
+            {% assign cat4url = category | remove:' ' | downcase %}
+            <a href="{{site.baseurl}}/category/{{cat4url}}">
+                <span class="category-item">{{ category }}</span>
+            </a>
+        {% endfor %}
+        </div>
+  </div>
+  <div class="upper-share">
+      {% if site.show_sharing_icons %}
+        {% include share_buttons.html %}
+      {% endif %}
+  {% endif %}
+  </div>
+  <div class="clearfix"></div>
+  <div class="post-meta-container">
+    {{ page.date | date: site.date_format }}
+    {% if page.update_date %}
+    <div class="post-meta">{{ site.text.post.updated | default: "Updated" }}: {{ page.update_date | date: site.date_format }}</div>
+    {% endif %}
+  </div>
+  <div class="page-minutes post-meta">
+  {% if site.show_page_minutes %}
+    {% if page.minutes %}
+      {{ page.minutes }} {{ site.text.post.minute_read | default: "minute read" }}
+    {% else %}
+      {{ minutes }} {{ site.text.post.minute_read | default: "minute read" }}
+    {% endif %}
+  {% endif %}
+  </div>
+<div class="clearfix"></div>
+  <div class="lower-share">
+      {% if site.show_sharing_icons %}
+        {% include share_buttons.html %}
+      {% endif %}
+  </div>
+<div class="clearfix"></div>
+</div>
+<article class="post-content">
+  {{ content }}
+</article>
+
+
+{% if site.disqus_shortname %}
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+    var disqus_shortname  = '{{ site.disqus_shortname }}';
+    var disqus_identifier = '{{ page.id }}';
+    var disqus_title      = {{ page.title | jsonify }};
+
+    (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+{% endif %}
+
+{% if site.show_related_posts %}
+    {% include related_posts.html %}
+{% endif %}

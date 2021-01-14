@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Only include in production -->
+<style>
+  .cc-btn,  .cc-compliance a:active, .cc-compliance a:focus {
+    text-shadow: unset;
+    text-decoration: none !important;
+    border:unset;
+    background-image: unset;
+  }
+ 
+  a.cc-allow:hover, a.cc-btn:active {
+    text-shadow: unset;
+    border: unset;
+    color: green;
+    text-decoration: none !important;
+    background-image: unset !important;
+  }
+  
+  .cc-compliance a {
+    text-decoration: none !important;
+  }
+
+  .cc-btn {
+    border-style: unset !important;
+    font-family: quicksand;
+  }
+
+  .cc-message {
+    font-family:quicksand;
+  }
+
+  
+</style>
+
+<!-- Add google analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id="></script>
+
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>How to Enable Docker Remote API, Usage and Risks &#8211; Castle of Ozdogan</title>
+    <link rel="preconnect" href="//fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="//fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="//maxcdn.bootstrapcdn.com" crossorigin>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="In various situations you may in a need to control Docker outside of your host environment. Let's say you're deploying to a server of yours and to remote deploy you need a connection to your Docker Daemon.
+">
+    <meta name="robots" content="all">
+    <meta name="author" content="Ufuk Ozdogan">
+    
+    <meta name="keywords" content="Docker, DevOps">
+    <link rel="canonical" href="http://localhost:4000/2020/09/14/docker-remote-api">
+    <link rel="alternate" type="application/rss+xml" title="RSS Feed for Castle of Ozdogan" href="/feed.xml" />
+
+    <!-- Custom CSS -->
+    <!-- <link rel="stylesheet" href="/css/pixyll.css?202101150011" type="text/css"> -->
+    <link rel="stylesheet" href="/css/pixyll.css" type="text/css">
+
+    <!-- Fonts -->
+    
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="//fonts.googleapis.com/css?family=Bitter:400,400i,700&amp;display=swap" rel="stylesheet">
+    <link href="//fonts.googleapis.com/css?family=Alegreya+Sans+SC&display=swap" rel="stylesheet">
+    <link href="//fonts.googleapis.com/css?family=Special+Elite&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono&display=swap" rel="stylesheet"> 
+    
+    
+      <link href="//maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css" rel="stylesheet">
+    
+
+    <!-- MathJax -->
+    
+
+    <!-- Verifications -->
+    
+    
+
+    <!-- Open Graph -->
+    <!-- From: https://github.com/mmistakes/hpstr-jekyll-theme/blob/master/_includes/head.html -->
+    <meta property="og:locale" content="en_US">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Enable Docker Remote API, Usage and Risks">
+    <meta property="og:description" content="Is a DevOps Engineer but also kind of a hardcore gamer some might probably say. Spends most of his time with his family or while coding, eating stuff and doing something video game related.
+">
+    <meta property="og:url" content="http://localhost:4000/2020/09/14/docker-remote-api">
+    <meta property="og:site_name" content="Castle of Ozdogan">
+    
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    
+        <meta name="twitter:site" content="@ufuk_ozdogan" />
+        <meta name="twitter:creator" content="@ufuk_ozdogan" />
+    
+    <meta name="twitter:title" content="How to Enable Docker Remote API, Usage and Risks" />
+    <meta name="twitter:description" content="In various situations you may in a need to control Docker outside of your host environment. Let's say you're deploying to a server of yours and to remote deploy you need a connection to your Docker Daemon.
+" />
+    <meta name="twitter:url" content="http://localhost:4000/2020/09/14/docker-remote-api" />
+    
+
+    <!-- Icons -->
+    <link rel="apple-touch-icon" sizes="57x57" href="/apple-touch-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/apple-touch-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/apple-touch-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/apple-touch-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/apple-touch-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png">
+    <link rel="icon" type="image/png" href="/favicon-192x192.png" sizes="192x192">
+    <link rel="icon" type="image/png" href="/favicon-160x160.png" sizes="160x160">
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
+    <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+    <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+    <link rel="shortcut icon" href="/favicon.ico">
+
+
+</head>
+
+<body class="site">
+  <!-- Target for toggling the sidebar `.sidebar-checkbox` is for regular
+     styles, `#sidebar-checkbox` for behavior. -->
+<input type="checkbox" class="sidebar-checkbox" id="sidebar-checkbox">
+
+<!-- Toggleable sidebar -->
+<div class="sidebar" id="sidebar">
+    <figure class="author-image">
+        <a class="img" href="/about" style="background-image: url(/images/site/ufuk.jpg)">
+            <span class="hidden">
+                Ufuk Ozdogan's Picture
+            </span>
+        </a>
+    </figure>
+    <section class="author">
+        <div class="social-links">
+            <div class="social">
+  <div class="social-icons">
+    
+      <a class="fa fa-github" href="https://github.com/ufukozdogan"></a>
+    
+    
+    
+    
+    <a class="fa fa-rss" href="/feed.xml"></a>
+    
+      <a class="fa fa-twitter" href="https://twitter.com/ufuk_ozdogan"></a>
+    
+    
+    
+    
+    
+      <a class="fa fa-envelope" href="mailto:ufukgozdogan@gmail.com"></a>
+    
+    
+      <a class="fa fa-linkedin" href="https://www.linkedin.com/in/ufukozdogan"></a>
+    
+    
+    
+    
+    
+  </div>
+</div>
+<div class="clearfix"></div>
+
+        </div>
+    </section>
+   
+  <nav class="sidebar-nav">
+   <h3 class="category-topic">Pages/</h3>
+    <a class="sidebar-nav-item" href="/">Posts</a>
+
+    
+
+    
+    
+      
+    
+      
+        
+      
+    
+      
+        
+          <a class="sidebar-nav-item" href="/about/">whoami</a>
+        
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+
+   <h3 class="category-topic">Topics/</h3>
+    
+    
+     
+     <a class="sidebar-nav-item" href="/category/devops">DevOps</a>
+    
+     
+     <a class="sidebar-nav-item" href="/category/docker">Docker</a>
+    
+     
+     <a class="sidebar-nav-item" href="/category/videogames">Video Games</a>
+    
+  </nav>
+
+  <div class="sidebar-item">
+    <p>
+      &copy; 2021. All rights reserved.
+    </p>
+  </div>
+</div>
+
+  <div class="site-wrap">
+    <header class="site-header px2 px-responsive">
+  <div class="mt2 wrap">
+    <div class="measure">
+      <div class="title">
+          <a href="/" class="site-title">Castle of Ozdogan</a>
+      </div>
+      
+      <div class="subtitle">
+          <a href="/">
+              {thoughts and reviews}
+          </a>
+      </div>
+      
+      <figure class="looking-image">
+        <div class="img" href="" style="background-image: url(/images/site/looking13.svg)"/>
+      </figure>
+    </div>
+  </div>
+</header>
+<div class="wallborder"></div>
+<div class="wallborder2"></div>
+<div class="clearfix"></div>
+
+
+    <div class="post p2 p-responsive wrap" role="main">
+      <div class="measure">
+        
+
+
+<div class="page-navigation">
+    <!--<a class="home" href="/">-->
+    
+    <a class="home" href="/2021/01/14/cyberpunk-2077-review">
+        <!--&laquo; HOME-->
+        &laquo;  Cyberpunk 2077 Review
+    </a>
+    
+  
+</div>
+
+<div class="clearfix bottom-border"></div>
+<div class="post-header mb1">
+  <h1>How to Enable Docker Remote API, Usage and Risks</h1>
+    
+  <div class="post-categories">
+        <div class="category-block">
+        
+            
+            <a href="/category/docker">
+                <span class="category-item">Docker</span>
+            </a>
+        
+            
+            <a href="/category/devops">
+                <span class="category-item">DevOps</span>
+            </a>
+        
+        </div>
+  </div>
+  <div class="upper-share">
+      
+        <div class="share-page">
+  <div class="share-links">
+    
+      <a class="fa fa-facebook" href="https://facebook.com/sharer.php?u=http%3A%2F%2Flocalhost%3A4000%2F2020%2F09%2F14%2Fdocker-remote-api" rel="nofollow" target="_blank" title="Share on Facebook"></a>
+    
+
+    
+      <a class="fa fa-twitter" href="https://twitter.com/intent/tweet?text=How+to+Enable+Docker+Remote+API%2C+Usage+and+Risks&amp;url=http%3A%2F%2Flocalhost%3A4000%2F2020%2F09%2F14%2Fdocker-remote-api" rel="nofollow" target="_blank" title="Share on Twitter"></a>
+    
+
+    
+
+    
+      <a class="fa fa-linkedin" href="http://www.linkedin.com/shareArticle?url=http%3A%2F%2Flocalhost%3A4000%2F2020%2F09%2F14%2Fdocker-remote-api&amp;title=How+to+Enable+Docker+Remote+API%2C+Usage+and+Risks" rel="nofollow" target="_blank" title="Share on LinkedIn"></a>
+    
+
+    
+      <a class="fa fa-digg" href="http://digg.com/submit?url=http%3A%2F%2Flocalhost%3A4000%2F2020%2F09%2F14%2Fdocker-remote-api&amp;title=How+to+Enable+Docker+Remote+API%2C+Usage+and+Risks" rel="nofollow" target="_blank" title="Share on Digg"></a>
+    
+
+    
+
+    
+      <a class="fa fa-reddit" href="http://reddit.com/submit?url=http%3A%2F%2Flocalhost%3A4000%2F2020%2F09%2F14%2Fdocker-remote-api&amp;title=How+to+Enable+Docker+Remote+API%2C+Usage+and+Risks" rel="nofollow" target="_blank" title="Share on Reddit"></a>
+    
+
+    
+
+    
+  
+    
+      <a class="fa fa-envelope" href="mailto:?subject=How to Enable Docker Remote API, Usage and Risks&amp;body=Check out this site http://localhost:4000/2020/09/14/docker-remote-api" title="Share via Email" ></a>
+    
+  </div>
+</div>
+
+      
+  
+  </div>
+  <div class="clearfix"></div>
+  <div class="post-meta-container">
+    Sep 14, 2020
+    
+  </div>
+  <div class="page-minutes post-meta">
+  
+    
+      2 minute read
+    
+  
+  </div>
+<div class="clearfix"></div>
+  <div class="lower-share">
+      
+        <div class="share-page">
+  <div class="share-links">
+    
+      <a class="fa fa-facebook" href="https://facebook.com/sharer.php?u=http%3A%2F%2Flocalhost%3A4000%2F2020%2F09%2F14%2Fdocker-remote-api" rel="nofollow" target="_blank" title="Share on Facebook"></a>
+    
+
+    
+      <a class="fa fa-twitter" href="https://twitter.com/intent/tweet?text=How+to+Enable+Docker+Remote+API%2C+Usage+and+Risks&amp;url=http%3A%2F%2Flocalhost%3A4000%2F2020%2F09%2F14%2Fdocker-remote-api" rel="nofollow" target="_blank" title="Share on Twitter"></a>
+    
+
+    
+
+    
+      <a class="fa fa-linkedin" href="http://www.linkedin.com/shareArticle?url=http%3A%2F%2Flocalhost%3A4000%2F2020%2F09%2F14%2Fdocker-remote-api&amp;title=How+to+Enable+Docker+Remote+API%2C+Usage+and+Risks" rel="nofollow" target="_blank" title="Share on LinkedIn"></a>
+    
+
+    
+      <a class="fa fa-digg" href="http://digg.com/submit?url=http%3A%2F%2Flocalhost%3A4000%2F2020%2F09%2F14%2Fdocker-remote-api&amp;title=How+to+Enable+Docker+Remote+API%2C+Usage+and+Risks" rel="nofollow" target="_blank" title="Share on Digg"></a>
+    
+
+    
+
+    
+      <a class="fa fa-reddit" href="http://reddit.com/submit?url=http%3A%2F%2Flocalhost%3A4000%2F2020%2F09%2F14%2Fdocker-remote-api&amp;title=How+to+Enable+Docker+Remote+API%2C+Usage+and+Risks" rel="nofollow" target="_blank" title="Share on Reddit"></a>
+    
+
+    
+
+    
+  
+    
+      <a class="fa fa-envelope" href="mailto:?subject=How to Enable Docker Remote API, Usage and Risks&amp;body=Check out this site http://localhost:4000/2020/09/14/docker-remote-api" title="Share via Email" ></a>
+    
+  </div>
+</div>
+
+      
+  </div>
+<div class="clearfix"></div>
+</div>
+<article class="post-content">
+  <p>In various situations you may in a need to control Docker outside of your host environment. Let’s say you’re deploying to a server of yours and to remote deploy you need a connection to your Docker Daemon. <!--more--> In that scenario Docker REST API connection comes to your rescue but with a little security cost. We’ll talk about that later in this post.
+But first let’s enable it. Assuming that you already have a server that has Docker installed on it.</p>
+
+<h2 id="enabling-docker-remote-api">Enabling Docker Remote API</h2>
+
+<p>Go to <code class="language-plaintext highlighter-rouge">/lib/systemd/system</code> and edit the file <code class="language-plaintext highlighter-rouge">docker.service</code> with your favourite terminal editor. Doesn’t matter whether you’re a <em>super user</em> or not. Find the line below and edit it like this:</p>
+
+<div class="language-terminal highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">ExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:2376 --containerd=/run/containerd/containerd.sock
+</span></code></pre></div></div>
+
+<p>This way Docker engine server will be binded to Unix socket and TCP Port 2376. You can change the port however you want but be sure that it’s not being used by any other service on your machine.</p>
+
+<p>After editing fire up these commands:</p>
+
+<div class="language-terminal highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">sudo systemctl daemon-reload
+sudo service docker restart
+</span></code></pre></div></div>
+
+<p>Now your remote API is enabled. Let’s test it.</p>
+
+<h2 id="testing-docker-remote-api-connection">Testing Docker Remote API Connection</h2>
+
+<p>Step outside from your server to anywhere else and now, you should be able to run these commands.</p>
+
+<h3 id="with-docker">With Docker</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker -H YOUR_SERVER_IP:2376 version
+</code></pre></div></div>
+
+<h3 id="with-curl">With cURL</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl http://YOUR_SERVER_IP:2376/version
+</code></pre></div></div>
+
+<h3 id="with-a-rest-client">With a REST Client</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://YOUR_SERVER_IP:2376/version
+</code></pre></div></div>
+
+<h2 id="benefits-and-advanced-usage">Benefits and Advanced Usage</h2>
+
+<p>As dangerous as this can be (ops, spoilers for next chapter), this connection also offers some undeniable benefits. For example, from your CI agent you could say:</p>
+
+<div class="language-terminal highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">docker -H YOUR_SERVER_IP:2376 pull YOUR_IMAGE
+docker -H YOUR_SERVER_IP:2376 run
+        --name 
+        -it
+        -e SAMPLE_ENV=SAMPLE_ENV_VARIABLE
+        -p 80:80
+</span><span class="gp">        -d $</span>YOUR_IMAGE
+</code></pre></div></div>
+
+<p>Honestly, this opens up so many options and enhances your reach on environments.</p>
+
+<h2 id="risks-and-side-effects">Risks and Side Effects</h2>
+
+<p>Take a moment the notice that the definition of the IP address we gave in the <em>docker.service</em> file. <code class="language-plaintext highlighter-rouge">0.0.0.0</code> means that <strong>any person</strong> who has the IP of your server and port of the Docker can connect to your Docker engine without hesitation. Opened ports are easily findable via various easy techniques thus your environment can be instantly vulnerable to attack. Take a look at this <a href="https://www.riccardoancarani.it/attacking-docker-exposed-api/">article</a> about attacking exposing Docker API’s to have a grasp on the situation.</p>
+
+<p>There are various solutions such as <a href="https://ahmet.im/blog/docker-http-basic-auth/">HTTP Basic Authentication with Nginx</a>, adding a <a href="https://gist.github.com/kekru/974e40bb1cd4b947a53cca5ba4b0bbe5">TLS client certificate verification</a> to Docker API. Personally I came up with another solution. I’ll edit this part when I wrote the article about it.</p>
+
+<h2 id="resources">Resources</h2>
+
+<ul>
+  <li><a href="https://success.docker.com/article/how-do-i-enable-the-remote-api-for-dockerd">https://success.docker.com/article/how-do-i-enable-the-remote-api-for-dockerd</a></li>
+  <li><a href="https://docs.docker.com/develop/sdk/examples/">https://docs.docker.com/develop/sdk/examples/</a></li>
+  <li><a href="https://medium.com/@sudarakayasindu/enabling-and-accessing-docker-engine-api-on-a-remote-docker-host-on-ubuntu-16-04-2c15f55f5d39">https://medium.com/@sudarakayasindu/enabling-and-accessing-docker-engine-api-on-a-remote-docker-host-on-ubuntu-16-04-2c15f55f5d39</a></li>
+  <li><a href="https://scriptcrunch.com/enable-docker-remote-api/">https://scriptcrunch.com/enable-docker-remote-api/</a></li>
+</ul>
+
+</article>
+
+
+
+
+
+    <div class="related-posts">
+    <h3 class="related-post-title">You might also like...</h3>
+
+
+
+
+
+    
+    
+    
+    
+  
+</div>
+
+
+
+      </div>
+    </div>
+  </div>
+
+  <label for="sidebar-checkbox" class="sidebar-toggle"></label>
+  <footer class="center post-footer">
+  <div class="measure">
+    
+    <figure class="author-image">
+        <a class="img" href="/about" style="background-image: url(/images/site/ufuk.jpg)">
+            <span class="hidden">
+                Ufuk Ozdogan's Picture
+            </span>
+        </a>
+    </figure>
+    <section class="author">
+        <div class="author-info">
+            <!-- Author Name -->
+            <a href="/about">
+                <h4> Ufuk Ozdogan </h4>
+            </a>
+        <div class="social-links">
+            <div class="social">
+  <div class="social-icons">
+    
+      <a class="fa fa-github" href="https://github.com/ufukozdogan"></a>
+    
+    
+    
+    
+    <a class="fa fa-rss" href="/feed.xml"></a>
+    
+      <a class="fa fa-twitter" href="https://twitter.com/ufuk_ozdogan"></a>
+    
+    
+    
+    
+    
+      <a class="fa fa-envelope" href="mailto:ufukgozdogan@gmail.com"></a>
+    
+    
+      <a class="fa fa-linkedin" href="https://www.linkedin.com/in/ufukozdogan"></a>
+    
+    
+    
+    
+    
+  </div>
+</div>
+<div class="clearfix"></div>
+
+        </div>
+            <!-- Author Bio -->
+            <div class="clearfix"/>
+            <p>
+                Is a DevOps Engineer but also kind of a hardcore gamer some might probably say. Spends most of his time with his family or while coding, eating stuff and doing something video game related.
+
+            </p>
+        </div>
+    </section>
+    
+    
+    <section class="copyright">
+        <a href=""></a> &copy; 
+              2021 &bull; All rights reserved.
+    </section>
+    <section class="disclaimer"> 
+        None of the ideas expressed on this website are supported
+or endorsed in any manner by my employer.  
+
+    </section>
+    
+  </div>
+</footer>
+
+<script type="text/javascript">
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js")
+    }
+</script>
+
+    <script>
+      (function(document) {
+        var toggle = document.querySelector('.sidebar-toggle');
+        var sidebar = document.querySelector('#sidebar');
+        var checkbox = document.querySelector('#sidebar-checkbox');
+
+        document.addEventListener('click', function(e) {
+          var target = e.target;
+
+          if(!checkbox.checked ||
+             sidebar.contains(target) ||
+             (target === checkbox || target === toggle)) return;
+
+          checkbox.checked = false;
+        }, false);
+      })(document);
+    </script>
+</body>
+</html>
